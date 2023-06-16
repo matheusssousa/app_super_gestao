@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\MotivoContato;
 use Illuminate\Http\Request;
 use App\Models\SiteContato;
 
@@ -9,42 +10,34 @@ class ContatoController extends Controller
 {
     public function contato(Request $request)
     {
-        // dd($request->all());
-        // $contato = new SiteContato();
-        // $contato->nome = $request->input('nome');
-        // $contato->telefone = $request->input('telefone');
-        // $contato->email = $request->input('email');
-        // $contato->motivo_contato = $request->input('motivo_contato');
-        // $contato->mensagem = $request->input('mensagem');
-        // $contato->save();
+        $motivo_contatos = MotivoContato::all();
 
-        // $contato = new SiteContato();
-        // $contato->fill($request->all());
-        // $contato->save();
-
-        // $contato = new SiteContato();
-        // $contato->create($request->all());
-
-        // print_r($contato->getAttributes());
-
-        $motivo_contatos = [
-            '1' => 'Dúvida',
-            '2' => 'Elogio',
-            '3' => 'Reclamação'
-        ];
         return view('site.contato', ['motivo_contatos' => $motivo_contatos]);
     }
 
     public function salvar(Request $request)
     {
-        // VALIDAÇÃO DOS DADOS NO FORMULARIO
-        $request->validate([
-            'nome' => 'required|min:3|max:40',
+        $regras = [
+            'nome' => 'required|min:3|max:40|unique:site_contatos',
             'telefone' => 'required',
-            'email' => 'required',
-            'motivo_contato' => 'required',
+            'email' => 'email',
+            'motivo_contatos_id' => 'required',
             'mensagem' => 'required|max:200'
-        ]);
-        // SiteContato::create($request->all());
+        ];
+
+        $feedback = [
+            'nome.min' => 'O campo nome precisa ter no minimo 3 caracteres.',
+            'nome.max' => 'O campo nome deve ter no máximo 40 caracteres.',
+            'nome.unique' => 'O nome já está incluso.',
+            'email.email' => 'O email não é válido.',
+            'mensagem.max' => 'A mensagem deve ter no máximo 2000 caracteres.',
+            'required' => 'O campo :attribute deve ser preenchido.'
+        ];
+        
+        // VALIDAÇÃO DOS DADOS NO FORMULARIO
+        $request->validate($regras, $feedback);
+
+        SiteContato::create($request->all());
+        return redirect()->route('site.index');
     }
 }
